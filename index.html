@@ -118,7 +118,7 @@
 </div>
 
 <script>
-  const defaultCommands = ["Jab", "Cross", "Hook", "Uppercut"];
+  const defaultCommands =  ["F", "B", "L", "R", "F1", "B1", "Jab", "Cross"];
   let availableCommands = JSON.parse(localStorage.getItem('boxingAvailableCommands')) || defaultCommands;
   let selectedCommands = JSON.parse(localStorage.getItem('boxingSelectedCommands')) || defaultCommands.slice(0, 2);
   let lastCommand = "";
