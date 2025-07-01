@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Boxing Command Trainer</title>
   <style>
     body {
@@ -77,34 +77,55 @@
       border-radius: 8px;
       margin-top: 20px;
     }
-    .save-status { text-align: center; margin-top: 10px; color: #63b3ed; }
+    .save-status {
+      text-align: center;
+      margin-top: 10px;
+      color: #63b3ed;
+    }
   </style>
 </head>
 <body>
 <div class="container">
   <div class="title">Boxing Command Trainer</div>
+
   <div style="display: flex; margin-bottom: 10px;">
     <input type="text" id="commandInput" placeholder="Add new command...">
     <button class="add-btn" onclick="addCommand()">Add</button>
   </div>
+
+  <div style="margin-bottom: 10px;">
+    <label>
+      <input type="checkbox" id="allowRepeats">
+      Allow Same Command Twice In a Row (Random Repeat)
+    </label><br/>
+    <label>
+      <input type="checkbox" id="enableDoubles">
+      Enable Doubles (e.g., Jab-Jab)
+    </label>
+  </div>
+
   <div class="command-list" id="commandList"></div>
+
   <button class="start-btn" style="margin-top: 10px; width: 100%;" onclick="startPractice()">Start Practice</button>
   <button class="stop-btn" style="margin-top: 10px; width: 100%;" onclick="stopPractice()">Stop Practice</button>
+
   <div class="status-box">
     <div>Next Command In: <span id="countdown">4</span>s</div>
     <h2 id="currentCommand">Get Ready!</h2>
   </div>
+
   <div class="save-status" id="saveStatus"></div>
 </div>
+
 <script>
   const defaultCommands = ["Jab", "Cross", "Hook", "Uppercut"];
   let availableCommands = JSON.parse(localStorage.getItem('boxingAvailableCommands')) || defaultCommands;
   let selectedCommands = JSON.parse(localStorage.getItem('boxingSelectedCommands')) || defaultCommands.slice(0, 2);
-  let currentCommand = "Get Ready!";
-  let countdown = 4;
+  let lastCommand = "";
   let isPracticing = false;
   let interval = null;
   let countdownInterval = null;
+  let countdown = 4;
   let utterance = new SpeechSynthesisUtterance();
   utterance.rate = 0.9;
 
@@ -183,11 +204,32 @@
   }
 
   function speakCommand() {
-    const cmd = selectedCommands[Math.floor(Math.random() * selectedCommands.length)];
+    const allowRepeat = document.getElementById('allowRepeats').checked;
+    const enableDoubles = document.getElementById('enableDoubles').checked;
+
+    // Construct extended list
+    let extendedCommands = [...selectedCommands];
+
+    if (enableDoubles) {
+      selectedCommands.forEach(cmd => extendedCommands.push(`${cmd}-${cmd}`));
+    }
+
+    let cmd = "";
+
+    if (allowRepeat && Math.random() < 0.3) {
+      cmd = lastCommand || extendedCommands[Math.floor(Math.random() * extendedCommands.length)];
+    } else {
+      do {
+        cmd = extendedCommands[Math.floor(Math.random() * extendedCommands.length)];
+      } while (!allowRepeat && cmd === lastCommand && extendedCommands.length > 1);
+    }
+
+    lastCommand = cmd;
     document.getElementById('currentCommand').textContent = cmd;
     document.getElementById('countdown').textContent = 4;
-    utterance.text = cmd;
+    utterance.text = cmd.replace("-", " ");  // To pronounce Jab-Jab as Jab Jab
     speechSynthesis.speak(utterance);
+
     let localCountdown = 4;
     clearInterval(countdownInterval);
     countdownInterval = setInterval(() => {
